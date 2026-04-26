@@ -1,17 +1,28 @@
 // FitTrack Pro — Auth & Onboarding screens
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Icon } from '../components/Icons.jsx';
 import { Btn, Chip, Field, Logomark, Toggle } from '../components/UI.jsx';
 
 export function ScreenLogin({ theme, onLogin }) {
-  const [email, setEmail] = useState('bharath@fittrack.app');
-  const [pw, setPw] = useState('••••••••');
+  const [email, setEmail] = useState('');
+  const [pw, setPw] = useState('');
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const lastLogTime = useMemo(() => {
+    const now = new Date();
+    return now.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+  }, []);
 
   const submit = () => {
+    setError('');
+    if (!email.trim() || !pw) { setError('Please enter email and password.'); return; }
     setLoading(true);
-    setTimeout(() => onLogin(), 700);
+    setTimeout(() => {
+      setLoading(false);
+      onLogin({ email: email.trim().toLowerCase(), password: pw });
+    }, 700);
   };
 
   return (
@@ -34,12 +45,12 @@ export function ScreenLogin({ theme, onLogin }) {
           Welcome back.
         </div>
         <div style={{ fontSize: 15, color: theme.textSoft, lineHeight: 1.5 }}>
-          Pick up your streak. Your last log was <b style={{ color: theme.text }}>yesterday at 9:12 PM</b>.
+          Pick up your streak. Your last log was <b style={{ color: theme.text }}>{lastLogTime}</b>.
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <Field theme={theme} label="Email" value={email} onChange={setEmail} type="email" />
+        <Field theme={theme} label="Email" value={email} onChange={setEmail} type="email" placeholder="you@email.com" />
         <div>
           <div style={{ fontSize: 12, fontWeight: 600, color: theme.textSoft, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>
             Password
@@ -53,6 +64,8 @@ export function ScreenLogin({ theme, onLogin }) {
               type={show ? 'text' : 'password'}
               value={pw}
               onChange={(e) => setPw(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submit()}
+              placeholder="Password"
               style={{
                 flex: 1, background: 'transparent', border: 'none', outline: 'none',
                 fontSize: 16, color: theme.text, fontFamily: 'inherit', fontWeight: 500,
@@ -66,6 +79,10 @@ export function ScreenLogin({ theme, onLogin }) {
         </div>
       </div>
 
+      {error && (
+        <div style={{ marginTop: 10, fontSize: 13, color: theme.danger, fontWeight: 600 }}>{error}</div>
+      )}
+
       <div style={{ textAlign: 'right', marginTop: 12, marginBottom: 28 }}>
         <a style={{ fontSize: 13, color: theme.primary, fontWeight: 600 }}>Forgot password?</a>
       </div>
@@ -74,23 +91,10 @@ export function ScreenLogin({ theme, onLogin }) {
         {loading ? 'Signing in…' : 'Sign in'}
       </Btn>
 
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 12, margin: '22px 0',
-        color: theme.textMute, fontSize: 12, fontWeight: 600, letterSpacing: 0.6,
-      }}>
-        <div style={{ flex: 1, height: 1, background: theme.line }}/>
-        OR
-        <div style={{ flex: 1, height: 1, background: theme.line }}/>
-      </div>
-
-      <Btn theme={theme} kind="ghost" full icon={<Icon.Apple s={20}/>} onClick={submit}>
-        Continue with Apple
-      </Btn>
-
       <div style={{ flex: 1 }}/>
       <div style={{ textAlign: 'center', fontSize: 14, color: theme.textSoft, paddingTop: 16 }}>
         New here?{' '}
-        <span onClick={() => onLogin('onboard')} style={{ color: theme.primary, fontWeight: 700, cursor: 'pointer' }}>
+        <span onClick={() => onLogin({ signup: true })} style={{ color: theme.primary, fontWeight: 700, cursor: 'pointer' }}>
           Create account
         </span>
       </div>
@@ -101,7 +105,7 @@ export function ScreenLogin({ theme, onLogin }) {
 // ─── Onboarding (5 steps) ────────────────────────────────────────────────
 export function ScreenOnboard({ theme, onDone, name, setName }) {
   const [step, setStep] = useState(0);
-  const [profile, setProfile] = useState({ age: '28', height: '178', weight: '82', goal: '76', activity: 'moderate' });
+  const [profile, setProfile] = useState({ age: '', height: '', weight: '', goal: '', activity: 'moderate' });
   const [target, setTarget] = useState(2000);
   const [gymDays, setGymDays] = useState(['Mon','Tue','Thu','Fri','Sat']);
   const [monthlyTarget, setMonthlyTarget] = useState(22);
@@ -109,7 +113,7 @@ export function ScreenOnboard({ theme, onDone, name, setName }) {
 
   const steps = ['Profile', 'Target', 'Schedule', 'Reminders', 'Ready'];
 
-  const next = () => (step < 4 ? setStep(step + 1) : onDone());
+  const next = () => (step < 4 ? setStep(step + 1) : onDone({ target, monthlyTarget, weight: parseFloat(profile.weight) || 80 }));
   const back = () => step > 0 && setStep(step - 1);
 
   const toggleDay = (d) => {
@@ -117,9 +121,9 @@ export function ScreenOnboard({ theme, onDone, name, setName }) {
   };
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: theme.bg }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: theme.bg, minHeight: 0, overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{ padding: '16px 22px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '12px 18px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <button onClick={step === 0 ? undefined : back} style={{
           width: 40, height: 40, borderRadius: 20, border: 'none',
           background: theme.chip, color: theme.text, cursor: step === 0 ? 'default' : 'pointer',
@@ -129,13 +133,13 @@ export function ScreenOnboard({ theme, onDone, name, setName }) {
         <div style={{ fontSize: 13, color: theme.textSoft, fontWeight: 600 }}>
           Step {step + 1} of {steps.length}
         </div>
-        <button onClick={onDone} style={{
+        <button onClick={() => onDone({ target, monthlyTarget, weight: parseFloat(profile.weight) || 80 })} style={{
           background: 'transparent', border: 'none', color: theme.textSoft,
           fontSize: 13, fontWeight: 600, cursor: 'pointer',
         }}>Skip</button>
       </div>
       {/* Progress */}
-      <div style={{ padding: '0 22px 18px', display: 'flex', gap: 6 }}>
+      <div style={{ padding: '0 18px 10px', display: 'flex', gap: 6, flexShrink: 0 }}>
         {steps.map((_, i) => (
           <div key={i} style={{
             flex: 1, height: 4, borderRadius: 2,
@@ -145,24 +149,24 @@ export function ScreenOnboard({ theme, onDone, name, setName }) {
         ))}
       </div>
 
-      <div key={step} style={{ flex: 1, padding: '8px 26px 16px', overflow: 'auto', animation: 'ftSlideIn 0.32s ease' }}>
+      <div key={step} style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '4px 22px 8px', animation: 'ftSlideIn 0.32s ease' }}>
         {step === 0 && (
           <>
-            <div style={{ fontSize: 28, fontWeight: 700, color: theme.text, lineHeight: 1.15, letterSpacing: -0.6 }}>
+            <div style={{ fontSize: 24, fontWeight: 700, color: theme.text, lineHeight: 1.15, letterSpacing: -0.6 }}>
               Tell us about you.
             </div>
-            <div style={{ fontSize: 14, color: theme.textSoft, marginTop: 6, marginBottom: 24 }}>
+            <div style={{ fontSize: 13, color: theme.textSoft, marginTop: 4, marginBottom: 16 }}>
               We use this to suggest a daily calorie target.
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <Field theme={theme} label="Name" value={name} onChange={setName} placeholder="Your name" />
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ display: 'flex', gap: 10 }}>
                 <Field theme={theme} label="Age" value={profile.age} onChange={(v) => setProfile({...profile, age: v})} suffix="yrs" style={{ flex: 1 }}/>
                 <Field theme={theme} label="Height" value={profile.height} onChange={(v) => setProfile({...profile, height: v})} suffix="cm" style={{ flex: 1 }}/>
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <Field theme={theme} label="Current weight" value={profile.weight} onChange={(v) => setProfile({...profile, weight: v})} suffix="kg" style={{ flex: 1 }}/>
-                <Field theme={theme} label="Goal weight" value={profile.goal} onChange={(v) => setProfile({...profile, goal: v})} suffix="kg" style={{ flex: 1 }}/>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <Field theme={theme} label="Weight" value={profile.weight} onChange={(v) => setProfile({...profile, weight: v})} suffix="kg" style={{ flex: 1 }}/>
+                <Field theme={theme} label="Goal" value={profile.goal} onChange={(v) => setProfile({...profile, goal: v})} suffix="kg" style={{ flex: 1 }}/>
               </div>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: theme.textSoft, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Activity</div>
@@ -298,7 +302,7 @@ export function ScreenOnboard({ theme, onDone, name, setName }) {
               <Icon.Check s={56} sw={2.5}/>
             </div>
             <div style={{ fontSize: 30, fontWeight: 700, color: theme.text, letterSpacing: -0.6, marginBottom: 10 }}>
-              You're set, {name.split(' ')[0]}.
+              You're set, {name.split(' ')[0] || 'there'}.
             </div>
             <div style={{ fontSize: 15, color: theme.textSoft, lineHeight: 1.5, maxWidth: 280 }}>
               Target <b style={{ color: theme.text }}>{target.toLocaleString()} kcal</b>, gym <b style={{ color: theme.text }}>{monthlyTarget}× this month</b>. Let's log your first meal.
@@ -307,7 +311,7 @@ export function ScreenOnboard({ theme, onDone, name, setName }) {
         )}
       </div>
 
-      <div style={{ padding: '12px 26px 20px' }}>
+      <div style={{ padding: '10px 22px 16px', flexShrink: 0 }}>
         <Btn theme={theme} kind="primary" full onClick={next}>
           {step === 4 ? 'Open dashboard' : 'Continue'}
         </Btn>

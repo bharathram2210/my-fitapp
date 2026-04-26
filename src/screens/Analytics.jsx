@@ -281,7 +281,7 @@ const ACCENT_SWATCHES = {
   clay:  '#B8755A',
 };
 
-export function ScreenProfile({ theme, prefs, setPref, onLogout }) {
+export function ScreenProfile({ theme, prefs, setPref, onLogout, weight, onWeightChange }) {
   const name = prefs.userName;
   const target = prefs.calorieTarget;
   const monthlyTarget = prefs.monthlyTarget;
@@ -364,6 +364,15 @@ export function ScreenProfile({ theme, prefs, setPref, onLogout }) {
         />
         <NumberRow
           theme={theme}
+          label="Current weight"
+          value={weight}
+          suffix="kg"
+          min={30} max={250} step={0.1}
+          decimals={1}
+          onChange={onWeightChange}
+        />
+        <NumberRow
+          theme={theme}
           label="Monthly gym target"
           value={monthlyTarget}
           suffix="sessions"
@@ -437,10 +446,11 @@ function EditableRow({ theme, label, value, onCommit }) {
   );
 }
 
-function NumberRow({ theme, label, value, suffix, min, max, step, onChange }) {
-  const clamp = (v) => Math.max(min, Math.min(max, v));
+function NumberRow({ theme, label, value, suffix, min, max, step, decimals = 0, onChange }) {
+  const clamp = (v) => Math.max(min, Math.min(max, parseFloat(v.toFixed(decimals))));
   const dec = () => onChange(clamp(value - step));
   const inc = () => onChange(clamp(value + step));
+  const display = decimals > 0 ? value.toFixed(decimals) : value.toLocaleString();
   const btnStyle = (disabled) => ({
     width: 32, height: 32, borderRadius: 10,
     border: `1px solid ${theme.line}`,
@@ -456,7 +466,7 @@ function NumberRow({ theme, label, value, suffix, min, max, step, onChange }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button onClick={dec} disabled={value <= min} style={btnStyle(value <= min)}>−</button>
         <div style={{ minWidth: 72, textAlign: 'center', fontSize: 14, fontWeight: 700, color: theme.text, fontFeatureSettings: '"tnum"' }}>
-          {value.toLocaleString()}<span style={{ fontSize: 11, color: theme.textSoft, marginLeft: 4, fontWeight: 600 }}>{suffix}</span>
+          {display}<span style={{ fontSize: 11, color: theme.textSoft, marginLeft: 4, fontWeight: 600 }}>{suffix}</span>
         </div>
         <button onClick={inc} disabled={value >= max} style={btnStyle(value >= max)}>+</button>
       </div>
