@@ -1,0 +1,81 @@
+html, body, #root { margin: 0; padding: 0; height: 100%; }
+html { background: #1a1a1a; }
+
+body {
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  min-height: 100dvh;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  color: #fff;
+  overscroll-behavior: none;
+}
+* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; box-sizing: border-box; }
+button, input, select, textarea { font-family: inherit; }
+input::placeholder { color: rgba(120,130,125,0.7); }
+
+@keyframes ftFadeIn  { from { opacity: 0; transform: translateY(8px);  } to { opacity: 1; transform: none; } }
+@keyframes ftSlideIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes ftPop     { 0%   { opacity: 0; transform: scale(0.5);       } 100% { opacity: 1; transform: scale(1); } }
+@keyframes ftBarRise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
+/* ─── Responsive app shell ────────────────────────────────────────────── */
+/* Mobile first: full viewport, no frame, no notch. */
+.phone {
+  width: 100vw;
+  height: 100dvh;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  position: relative;
+}
+.phone-notch { display: none; }
+
+/* Hide the simulated phone status bar on real devices — they have their own */
+.phone-status-bar { display: none; }
+
+/* Desktop preview: show a phone frame, centered, with padding */
+@media (min-width: 768px) {
+  body {
+    background: #1a1a1a;
+    align-items: center;
+    padding: 24px;
+  }
+  .phone {
+    width: 412px;
+    height: min(892px, calc(100dvh - 48px));
+    border-radius: 50px;
+    background: #0a0a0a;
+    padding: 12px;
+    box-shadow: 0 50px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .phone-screen {
+    border-radius: 38px;
+  }
+  .phone-notch {
+    display: block;
+    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 32px; border-radius: 18px;
+    background: #0a0a0a; z-index: 100;
+  }
+  .phone-status-bar { display: flex; }
+}
+
+/* Safe-area padding on iOS / notched Android */
+@supports (padding: max(0px)) {
+  .safe-top    { padding-top: max(12px, env(safe-area-inset-top)); }
+  .safe-bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+}
